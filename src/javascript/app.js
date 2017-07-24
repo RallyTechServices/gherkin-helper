@@ -6,7 +6,7 @@ Ext.define("gherkin-helper", {
       config: {
         defaultSettings: {
           gherkinField: 'Notes',
-          gherkinRegex: "(.*)(given:.*)(when:.*)(then:.*)"
+          gherkinRegex: "(scenario outline:.*)(given:.*)(when:.*)(then:.*)"
         }
       },
 
@@ -20,8 +20,14 @@ Ext.define("gherkin-helper", {
 
        _addGridboard: function(){
 
+         if (!this.rendered){
+            this.on('render', this._addGridboard, this);
+            return;
+         }
          this.removeAll();
-         var modelNames = this.getModelNames();
+         var modelNames = this.getModelNames(),
+            gherkinField = this.getGherkinField(),
+            gherkinRegexp = this.getGherkinRegexp();
 
          Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
                models: modelNames,
@@ -38,6 +44,8 @@ Ext.define("gherkin-helper", {
                      plugins: [{
                        ptype: 'rallygridboardinlinefiltercontrol',
                        inlineFilterButtonConfig: {
+                          stateful: true,
+                          stateId: this.getContext().getScopedStateId('gherkin-filter'),
                            modelNames: modelNames,
                            inlineFilterPanelConfig: {
                                collapsed: false,
@@ -56,7 +64,7 @@ Ext.define("gherkin-helper", {
                      gridConfig: {
                          store: store,
                          columnCfgs: [
-                             'Name',
+                              'Name',
                              'ScheduleState'
                          ],
                          bulkEditConfig: {
@@ -82,7 +90,7 @@ Ext.define("gherkin-helper", {
          return this.getSetting('gherkinField');
        },
        getGherkinRegexp: function(){
-         return new RegExp(/(.*)(given:.*)(when:.*)(then:.*)/, "gim");
+         return "(scenario outline:.*)(given:.*)(when:.*)(then:.*)";
        },
        getRequiredFetchFields: function(){
          var fields = this.requiredGherkinFields;
@@ -90,4 +98,21 @@ Ext.define("gherkin-helper", {
          this.logger.log('getRequiredFetchFields', fields);
          return fields ;
        },
+       getSettingsFields: function(){
+          return [{
+              xtype: 'rallyfieldcombobox',
+              model: 'HierarchicalRequirement',
+              name: 'gherkinField',
+              fieldLabel: 'Acceptance Criteria Field',
+              labelWidth: 150,
+              labelAlign: 'right',
+              listeners: {
+                ready: function(combo) {
+                    combo.store.filterBy(function(record) {
+                        var attr = record.get('fieldDefinition').attributeDefinition;
+                        return attr && !attr.ReadOnly && attr.AttributeType === "TEXT";
+                    });
+              }}
+          }];
+       }
   });

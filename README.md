@@ -1,9 +1,47 @@
 # Gherkin Helper
-*** THIS IS A PROTOTYPE - DO NOT USE ***
+This app exports Gherkin .feature files from User Stories.  
 
 ## Summary/Description
 
-![screenshot](./images/screenshot.png "This is an example")
+The "Export Gherkin..." menu item is a bulk menu item and will only be available if the configured "Acceptance Criteria Field" has text
+that meets the following criteria (case insensitive):
+
+Scenario Outline: ...  Given: ... When: ... Then: ...
+
+This app can handle multiple Given/When/Then clauses as well as And and Or inside of a Given/When or Then.  
+
+Regardless of the format in the text field, the app will create a new line for each clause and any And or Or statements.  
+
+For a story with the following field values (and a configured Acceptance criteria field of "Notes") :
+
+FormattedID| US12
+Name|  User can checkout with credit card
+Description|  The user can checkout using a credit card from any valid bank  
+Notes|  Scenario Outline:  Cart has a balance of $600 given: there are sufficient funds and the card is valid  
+        when: the customer checks out with an american express card or a visa card then: the order should be submitted successfully and the customer should receive a confirmation
+
+
+Here is the expected file output:  
+
+```
+Feature: US12 User can checkout with credit card
+  The user can checkout using a credit card from any valid bank
+
+  Scenario Outline:  Cart has a balance of $600
+
+    Given: there are sufficient funds
+      And the card is valid  
+
+    When: the customer checks out with an american express card
+      Or a visa card
+
+    Then: the order should be submitted successfully
+      And the customer should receive a confirmation   
+
+```
+### App Settings
+#### Acceptance Criteria Field
+Defaults to Notes.  Configure this field to any text field on the user story that will contain the Gherkin formatted text.  
 
 ## Development Notes
 

@@ -10,41 +10,69 @@ Ext.define('CA.agile.technicalservices.GherkinFile',{
 
     var idx = 1,
         txt = [
-          Ext.String.format("{2}. Feature: {0} {1}", this.data.FormattedID, this.data.Name, idx++)
+          Ext.String.format("Feature: {0} {1}", this.data.FormattedID, this.data.Name)
         ];
         if (this.data.Description && this.data.Description.length > 0){
-          txt.push(Ext.String.format("{0}.  {1}", idx++, this.data.Description)); //TODO format better
+          txt.push(Ext.String.format("\t{0}", this._scrubText(this.data.Description))); //TODO format better
         }
-        txt.push(Ext.String.format("{0}.", idx++));
+        txt.push("\r\n");
 
-        var rawGherkin = this.data[this.gherkinField];
-        var re = new RegExp(/scenario:/,"gi"),
-          reScenario = new RegExp(/(.*)(given:.*)(when:.*)(then:.*)/,"gim"), //TODO does not account for multiple givens or thens or whens
-          rawScenarios = rawGherkin.split(re);
+        var rawGherkin = this._scrubText(this.data[this.gherkinField]);
+        var re = new RegExp(/scenario outline:|given:|when:|then:|examples:/,"gim");
 
-         Ext.Array.each(rawScenarios, function(sc){
+        gherkinBits = rawGherkin.split(re);
+        gherkinOrder = [];
+        while ((bits = re.exec(rawGherkin)) !== null) {
+          gherkinOrder.push(bits[0]);
+        }
 
-           if (sc && sc.length > 0){
+        var reScenario = new RegExp(/scenario outline:/,"gim"),
+          reAndOr = new RegExp(/and|or/,"gim");  //we ignore the first one in the bits
 
-             var match = reScenario.exec(sc);
+        for (var i=0; i<gherkinOrder.length; i++){
+          var keyword = this._toCamelCase(gherkinOrder[i]),
+              bit = gherkinBits[i+1],
+              prefix = "\t";
 
-             if (match && match.length > 0){
-               //TODO Strip out HTML
-               txt.push(Ext.String.format("{0}.  Scenario: {1}",idx++, match[1]));
-               for (var i=2; i<match.length; i++){
-                 txt.push(Ext.String.format("{0}.   {1}",idx++, this._scrubText(match[i])));
-               }
+          if (!reScenario.test(gherkinOrder[i])){ //this is a given, when, then or example
+             prefix = "\t\t";
+          }
 
-             }
+          andOrBits = bit.split(reAndOr);
+          andOrOrder = [];
+          while ((bits = reAndOr.exec(bit)) !== null) {
+            andOrOrder.push(bits[0]);
+          }
+          console.log('bit', andOrBits, andOrOrder);
+          //txt.push(Ext.String.format("{0}{1} {2}\r\n",prefix,keyword, bit));
 
-           }
+          txt.push(Ext.String.format("{0}{1}{2}\r\n",prefix, keyword, andOrBits[0]));
+          for (var j=1; j<andOrBits.length; j++){
+             txt.push(Ext.String.format("{0}\t{1}{2}\r\n",prefix,this._toCamelCase(andOrOrder[j-1]),andOrBits[j]));
+          }
 
-         }, this);
+        }
          return txt.join('\r\n');
     },
-    _scrubText: function(txt){
+    _scrubText: function(val){
         //Todo strip html
-        return txt.replace(/&nbsp;/g,'');
+        var reHTML = new RegExp('<\/?[^>]+>', 'g'),
+            reNbsp = new RegExp('&nbsp;','ig');
+
+        if (reHTML.test(val)){
+            val = val.replace(/<br.*>/g,'\r\n');
+            val = val.replace(/<\/div><div>/g,'\r\n');
+            val = Ext.util.Format.htmlDecode(val);
+            val = Ext.util.Format.stripTags(val);
+            //console.log('stripped html val', val);
+        }
+        if (reNbsp.test(val)){
+            val = val.replace(reNbsp,' ');
+        }
+        return val;
+    },
+    _toCamelCase: function(str){
+      return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
     },
     print: function(){
       this.win = window.open('',this.title);

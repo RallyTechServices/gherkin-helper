@@ -12,15 +12,19 @@ Ext.define('CA.agile.technicalservices.utils.bulkmenu.ExportGherkin', {
                 gherkinRegexp = this.gherkinRegexp;
 
             if (!gherkinField){ return false; }
-            return _.every(records, function (record) {
-                var gherkin = record.get(gherkinField);
+
+            var pred = _.every(records, function (record) {
+                var gherkin = record.get(gherkinField),
+                    re = new RegExp(gherkinRegexp,"gim");
+
                 if (gherkin){
                   //Only return items with the right format in the field
-                  return gherkinRegexp.test(gherkin);
+                  return re.test(gherkin);
                 }
                 return false;
-                return gherkin && gherkin;
             });
+
+            return pred;
         },
 
         handler: function () {
@@ -32,9 +36,26 @@ Ext.define('CA.agile.technicalservices.utils.bulkmenu.ExportGherkin', {
                  gherkinField: this.gherkinField
                });
                gherkinFile.export();
-               //gherkinFiles.push(gherkinFile.getText());
           }, this);
+          this.onSuccess(this.records,[],null,null);
+        },
+        _scrubText: function(val){
+            //Todo strip html
+            var reHTML = new RegExp('<\/?[^>]+>', 'g'),
+                reNbsp = new RegExp('&nbsp;','ig');
 
+            if (reHTML.test(val)){
+              console.log('html', val);
+                val = val.replace(/<br.*>/g,'\r\n');
+                val = val.replace(/<\/div><div>/g,'\r\n');
+                val = Ext.util.Format.htmlDecode(val);
+                val = Ext.util.Format.stripTags(val);
+                //console.log('stripped html val', val);
+            }
+            if (reNbsp.test(val)){
+                val = val.replace(reNbsp,' ');
+            }
+            return val;
         },
         onSuccess: function (successfulRecords, unsuccessfulRecords, args, errorMessage) {
 
