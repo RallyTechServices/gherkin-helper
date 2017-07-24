@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gherkin Helper</title>
+    <!--  (c) 2017 CA Technologies.  All Rights Reserved. -->
+    <!--  Build Date: Mon Jul 24 2017 17:16:13 GMT-0600 (MDT) -->
+    
+    <script type="text/javascript">
+        var APP_BUILD_DATE = "Mon Jul 24 2017 17:16:13 GMT-0600 (MDT)";
+        var STORY    = "F209";
+        var BUILDER  = "corkr03";
+        var CHECKSUM = 4667486585;
+    </script>
+    
+    <script type="text/javascript" src="/apps/2.1/sdk.js"></script>
+    <!-- our highcharts (needed so that we can add patterns) 
+    <script type="text/javascript" src="/apps/2.1/lib/analytics/analytics-all.js"></script>
+    -->
+    
+    
+    <script type="text/javascript">
+        Rally.onReady(function() {
+            Ext.define("Rally.technicalservices.InfoLink",{extend:"Rally.ui.dialog.Dialog",alias:"widget.tsinfolink",informationHtml:null,title:"Build Information",defaults:{padding:5,margin:5},closable:!0,draggable:!0,autoShow:!0,width:350,informationalConfig:null,items:[{xtype:"container",itemId:"information"}],initComponent:function(){Ext.id(this);this.title="<span class='icon-help'> </span>"+this.title,this.callParent(arguments)},_generateChecksum:function(a){var b,c=305419896;for(a=a.replace(/var CHECKSUM = .*;/,""),a=a.replace(/var BUILDER  = .*;/,""),a=a.replace(/\s/g,""),b=0;b<a.length;b++)c+=a.charCodeAt(b)*b;return c},_checkChecksum:function(a){var b=Ext.create("Deft.Deferred"),c=this;return Ext.Ajax.request({url:document.URL,params:{id:1},success:function(a){if(text=a.responseText,CHECKSUM){var d=c._generateChecksum(text);if(CHECKSUM!==d)return void b.resolve(!1)}b.resolve(!0)}}),b.promise},_addToContainer:function(a){var b=Ext.apply({xtype:"container",height:200,overflowY:!0},this.informationalConfig);a.add(b)},afterRender:function(){var a=Rally.getApp();if(!Ext.isEmpty(this.informationalConfig)){var b=this.down("#information");this._addToContainer(b)}a.isExternal()?this.addDocked({xtype:"container",cls:"build-info",padding:2,dock:"bottom",html:"... Running externally"}):this._checkChecksum(a).then({scope:this,success:function(a){a||this.addDocked({xtype:"container",cls:"build-info",dock:"bottom",padding:2,html:'<span class="icon-warning"> </span>Checksums do not match'})},failure:function(a){console.log("oops:",a)}}),this.callParent(arguments)},beforeRender:function(){if(this.callParent(arguments),this.informationHtml&&this.addDocked({xtype:"component",componentCls:"intro-panel",padding:2,html:this.informationHtml,doc:"top"}),this.addDocked({xtype:"container",cls:"build-info",padding:2,dock:"bottom",html:"This app was created by the CA AC Technical Services Team."}),APP_BUILD_DATE){var a=Ext.String.format("Built on: {0} <br/>Built by: {1}",APP_BUILD_DATE,BUILDER);STORY&&(a=a+"<br/>Source story: "+STORY),this.addDocked({xtype:"container",cls:"build-info",padding:2,dock:"bottom",html:a})}}}),Ext.define("Rally.technicalservices.Logger",{constructor:function(a){Ext.apply(this,a)},log:function(a){var b="[ "+Ext.util.Format.date(new Date,"Y-m-d H:i:s.u")+" ]",c=[];c=Ext.Array.push(c,[b]),c=Ext.Array.push(c,Ext.Array.slice(arguments,0)),window.console&&console.log.apply(console,c)}}),Ext.define("CA.agile.technicalservices.GherkinFile",{maxCharsPerLine:100,constructor:function(a){this.data=a.data,this.gherkinField=a.gherkinField},getText:function(){var a=[Ext.String.format("Feature: {0} {1}",this.data.FormattedID,this.data.Name)];this.data.Description&&this.data.Description.length>0&&a.push(Ext.String.format("	{0}",this._scrubText(this.data.Description))),a.push("\r\n");var b=this._scrubText(this.data[this.gherkinField]),c=new RegExp(/scenario outline:|given:|when:|then:|examples:/,"gim");for(gherkinBits=b.split(c),gherkinOrder=[];null!==(bits=c.exec(b));)gherkinOrder.push(bits[0]);for(var d=new RegExp(/scenario outline:/,"gim"),e=new RegExp(/and|or/,"gim"),f=0;f<gherkinOrder.length;f++){var g=this._toCamelCase(gherkinOrder[f]),h=gherkinBits[f+1],i="	";for(d.test(gherkinOrder[f])||(i="		"),andOrBits=h.split(e),andOrOrder=[];null!==(bits=e.exec(h));)andOrOrder.push(bits[0]);console.log("bit",andOrBits,andOrOrder),a.push(Ext.String.format("{0}{1}{2}\r\n",i,g,andOrBits[0]));for(var j=1;j<andOrBits.length;j++)a.push(Ext.String.format("{0}	{1}{2}\r\n",i,this._toCamelCase(andOrOrder[j-1]),andOrBits[j]))}return a.join("\r\n")},_scrubText:function(a){var b=new RegExp("</?[^>]+>","g"),c=new RegExp("&nbsp;","ig");return b.test(a)&&(a=a.replace(/<br.*>/g,"\r\n"),a=a.replace(/<\/div><div>/g,"\r\n"),a=Ext.util.Format.htmlDecode(a),a=Ext.util.Format.stripTags(a)),c.test(a)&&(a=a.replace(c," ")),a},_toCamelCase:function(a){return a.replace(/\w\S*/g,function(a){return a.charAt(0).toUpperCase()+a.substr(1).toLowerCase()})},print:function(){this.win=window.open("",this.title);var a=this.data.FormattedID+" Feature File",b=this.getText();this.win.document.write("<html><head><title>"+a+"</title>"),this.win.document.write('</head><body class="portrait">'),this.win.document.write(b),this.win.document.write("</body></html>")},"export":function(){var a=this.data.FormattedID+".feature",b=this.getText();this.saveAs(b,a)},saveAs:function(a,b,c){if(void 0===c&&(c={type:"text/csv;charset=utf-8"}),Ext.isIE9m)return void Rally.ui.notify.Notifier.showWarning({message:"Export is not supported for IE9 and below."});var d=null;try{d=new Blob([a],{type:"text/plain"})}catch(e){window.BlobBuilder=window.BlobBuilder||window.WebKitBlobBuilder||window.MozBlobBuilder||window.MSBlobBuilder,window.BlobBuilder&&"TypeError"==e.name&&(bb=new BlobBuilder,bb.append([a]),d=bb.getBlob("text/plain"))}if(!d)return void Rally.ui.notify.Notifier.showWarning({message:"Export is not supported for this browser."});var f=b;if(Ext.isIE10p)return void window.navigator.msSaveOrOpenBlob(d,f);var g=this.createObjectURL(d);if(g){var h=document.createElement("a");"download"in h?h.download=f:h.target="_blank",h.innerHTML="Download File",h.href=g,Ext.isChrome||(h.onclick=this.destroyClickedElement,h.style.display="none",document.body.appendChild(h)),h.click()}else Rally.ui.notify.Notifier.showError({message:"Export is not supported "})},createObjectURL:function(a){return window.webkitURL?window.webkitURL.createObjectURL(a):window.URL&&window.URL.createObjectURL?window.URL.createObjectURL(a):null},destroyClickedElement:function(a){document.body.removeChild(a.target)}}),Ext.define("CA.agile.technicalservices.utils.bulkmenu.ExportGherkin",{alias:"widget.exportgherkin",extend:"Rally.ui.menu.bulk.MenuItem",config:{text:"Export Gherkin...",gherkinField:null,gherkinRegexp:"",predicate:function(a){var b=this.gherkinField,c=this.gherkinRegexp;if(!b)return!1;var d=_.every(a,function(a){var d=a.get(b),e=new RegExp(c,"gim");return d?e.test(d):!1});return d},handler:function(){Ext.Array.each(this.records,function(a){var b=Ext.create("CA.agile.technicalservices.GherkinFile",{data:a.getData(),gherkinField:this.gherkinField});b["export"]()},this),this.onSuccess(this.records,[],null,null)},_scrubText:function(a){var b=new RegExp("</?[^>]+>","g"),c=new RegExp("&nbsp;","ig");return b.test(a)&&(console.log("html",a),a=a.replace(/<br.*>/g,"\r\n"),a=a.replace(/<\/div><div>/g,"\r\n"),a=Ext.util.Format.htmlDecode(a),a=Ext.util.Format.stripTags(a)),c.test(a)&&(a=a.replace(c," ")),a},onSuccess:function(a,b,c,d){var e=a.length+(1===a.length?" gherkin has been exported":" gherkins have been exported");a.length===this.records.length?Rally.ui.notify.Notifier.show({message:e+"."}):Rally.ui.notify.Notifier.showWarning({message:e+", but "+b.length+" failed: "+d}),Ext.callback(this.onActionComplete,null,[a,b])}}}),Ext.define("gherkin-helper",{extend:"Rally.app.App",componentCls:"app",logger:new Rally.technicalservices.Logger,config:{defaultSettings:{gherkinField:"Notes",gherkinRegex:"(scenario outline:.*)(given:.*)(when:.*)(then:.*)"}},modelNames:["userstory"],requiredGherkinFields:["Description","Name","FormattedID"],launch:function(){this._addGridboard()},_addGridboard:function(){if(!this.rendered)return void this.on("render",this._addGridboard,this);this.removeAll();var a=this.getModelNames();this.getGherkinField(),this.getGherkinRegexp();Ext.create("Rally.data.wsapi.TreeStoreBuilder").build({models:a,autoLoad:!0,enableHierarchy:!1,fetch:this.getRequiredFetchFields()}).then({success:function(b){this.add({xtype:"rallygridboard",context:this.getContext(),modelNames:a,toggleState:"grid",plugins:[{ptype:"rallygridboardinlinefiltercontrol",inlineFilterButtonConfig:{stateful:!0,stateId:this.getContext().getScopedStateId("gherkin-filter"),modelNames:a,inlineFilterPanelConfig:{collapsed:!1,quickFilterPanelConfig:{fieldNames:["Owner","ScheduleState"]}}}},{ptype:"rallygridboardfieldpicker",headerPosition:"left",modelNames:["User Story"],stateful:!0,stateId:this.getContext().getScopedStateId("gherkin-cols")}],gridConfig:{store:b,columnCfgs:["Name","ScheduleState"],bulkEditConfig:{items:[{xtype:"exportgherkin",gherkinField:this.getGherkinField(),gherkinRegexp:this.getGherkinRegexp()}]}},height:this.getHeight()})},scope:this})},getModelNames:function(){return this.modelNames},getGherkinField:function(){return this.getSetting("gherkinField")},getGherkinRegexp:function(){return"(scenario outline:.*)(given:.*)(when:.*)(then:.*)"},getRequiredFetchFields:function(){var a=this.requiredGherkinFields;return a.push(this.getGherkinField()),this.logger.log("getRequiredFetchFields",a),a},getSettingsFields:function(){return[{xtype:"rallyfieldcombobox",model:"HierarchicalRequirement",name:"gherkinField",fieldLabel:"Acceptance Criteria Field",labelWidth:150,labelAlign:"right",listeners:{ready:function(a){a.store.filterBy(function(a){var b=a.get("fieldDefinition").attributeDefinition;return b&&!b.ReadOnly&&"TEXT"===b.AttributeType})}}}]}});
+            
+               Rally.launchApp('gherkin-helper', {
+                   name: 'Gherkin Helper'
+               });
+        });
+    </script>
+    
+    <style type="text/css">
+
+.app {
+}
+.tsinfolink {
+    position:absolute;
+    right:0px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    text-align: center;
+    color: white;
+    background: #C0C0C0;
+    border-style: solid;
+    border-width: 1px;
+    margin-top: 25px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+    </style>
+
+</head>
+<body></body>
+</html>
