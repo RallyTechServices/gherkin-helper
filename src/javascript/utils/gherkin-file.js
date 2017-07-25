@@ -5,6 +5,7 @@ Ext.define('CA.agile.technicalservices.GherkinFile',{
   constructor: function(config){
      this.data = config.data,
      this.gherkinField = config.gherkinField;
+     this.strictFormatGherkin = config.strictFormatGherkin;
   },
   getText: function(){
 
@@ -18,6 +19,13 @@ Ext.define('CA.agile.technicalservices.GherkinFile',{
         txt.push("\r\n");
 
         var rawGherkin = this._scrubText(this.data[this.gherkinField]);
+
+        if (!this.strictFormatGherkin){
+          txt.push(rawGherkin);
+          return txt.join('\r\n');
+        }
+
+        //This was for more strict formatting of the gherkin file.
         var re = new RegExp(/scenario outline:|given:|when:|then:|examples:/,"gim");
 
         gherkinBits = rawGherkin.split(re);
