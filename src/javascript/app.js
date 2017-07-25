@@ -6,7 +6,8 @@ Ext.define("gherkin-helper", {
       config: {
         defaultSettings: {
           gherkinField: 'Notes',
-          gherkinRegex: "(scenario outline:.*)(given:.*)(when:.*)(then:.*)"
+          gherkinRegex: "(scenario outline:.*)(given:.*)(when:.*)(then:.*)",
+          strictFormatGherkin: false
         }
       },
 
@@ -90,7 +91,11 @@ Ext.define("gherkin-helper", {
          return this.getSetting('gherkinField');
        },
        getGherkinRegexp: function(){
-         return "(scenario outline:.*)(given:.*)(when:.*)(then:.*)";
+         if (this.getSetting('strictFormatGherkin') === 'true' || this.getSetting('strictFormatGherkin') === true){
+           return "(scenario outline:.*)(given:.*)(when:.*)(then:.*)";
+         }
+         return ".*";
+
        },
        getRequiredFetchFields: function(){
          var fields = this.requiredGherkinFields;
