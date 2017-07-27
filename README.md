@@ -2,6 +2,20 @@
 This app exports Gherkin .feature files from User Stories.  
 
 ## Summary/Description
+The "Export Gherkin..." menu item is a bulk menu item and will only be available if the configured "Acceptance Criteria Field" has any text in it.  
+It assumes that the text is formatted correctly and does not apply any checks or additional formatting.  
+
+This variation of the app will export a Feature file from the user story.  in the following format:
+
+@<User Story Formatted ID>
+@<Contents of configured Tags Field [Optional]>
+Feature:  <User Story Name>
+<User Story Description>
+
+<Contents of configured Acceptance Criteria field>
+
+
+"Use String Gherkin Format" = true App Behavior
 
 The "Export Gherkin..." menu item is a bulk menu item and will only be available if the configured "Acceptance Criteria Field" has text
 that meets the following criteria (case insensitive):
@@ -10,7 +24,7 @@ Scenario Outline: ...  Given: ... When: ... Then: ...
 
 This app can handle multiple Given/When/Then clauses as well as And and Or inside of a Given/When or Then.  
 
-Regardless of the format in the text field, the app will create a new line for each clause and any And or Or statements.  
+Regardless of the format in the text field, the app will create a new line for each clause and any And or Or statements.  (To enforce a more strict Gherkin format, change the "strictFormatGherkin" configuration at that top of the app.js file to true)
 
 For a story with the following field values (and a configured Acceptance criteria field of "Notes") :
 
@@ -19,12 +33,16 @@ Name|  User can checkout with credit card
 Description|  The user can checkout using a credit card from any valid bank  
 Notes|  Scenario Outline:  Cart has a balance of $600 given: there are sufficient funds and the card is valid  
         when: the customer checks out with an american express card or a visa card then: the order should be submitted successfully and the customer should receive a confirmation
+MultivalueField | somevalue1, someValue2         
 
 
 Here is the expected file output:  
 
 ```
-Feature: US12 User can checkout with credit card
+@US12
+@someValue1
+@someValue2
+Feature: User can checkout with credit card
   The user can checkout using a credit card from any valid bank
 
   Scenario Outline:  Cart has a balance of $600
@@ -42,6 +60,11 @@ Feature: US12 User can checkout with credit card
 ### App Settings
 #### Acceptance Criteria Field
 Defaults to Notes.  Configure this field to any text field on the user story that will contain the Gherkin formatted text.  
+
+#### Tags Field
+Defaults to None.  Configure this field to any multi-value dropdown field on the user story that will contain tags for the Gherkin file.  These
+will then be output at the top of the feature file as tags (See above)
+
 
 ## Development Notes
 

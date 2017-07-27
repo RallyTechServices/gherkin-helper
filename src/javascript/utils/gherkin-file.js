@@ -6,13 +6,24 @@ Ext.define('CA.agile.technicalservices.GherkinFile',{
      this.data = config.data,
      this.gherkinField = config.gherkinField;
      this.strictFormatGherkin = config.strictFormatGherkin;
+     this.tagsField = config.tagsField;
   },
   getText: function(){
 
     var idx = 1,
-        txt = [
-          Ext.String.format("Feature: {0} {1}", this.data.FormattedID, this.data.Name)
-        ];
+        txt = [Ext.String.format("@{0}",this.data.FormattedID)];
+
+        var tagsFieldValue = this.tagsField && this.data[this.tagsField];
+        if (tagsFieldValue && tagsFieldValue.Count > 0){
+          Ext.Array.each(tagsFieldValue._tagsNameArray || [], function(t){
+             if (t.Name){
+               txt.push(Ext.String.format("@{0}",t.Name));
+             }
+          });
+        }
+
+        txt.push(Ext.String.format("Feature: {0}", this.data.Name));
+
         if (this.data.Description && this.data.Description.length > 0){
           txt.push(Ext.String.format("\t{0}", this._scrubText(this.data.Description))); //TODO format better
         }

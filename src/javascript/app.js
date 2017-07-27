@@ -6,6 +6,7 @@ Ext.define("gherkin-helper", {
       config: {
         defaultSettings: {
           gherkinField: 'Notes',
+          tagsField: null,
           gherkinRegex: "(scenario outline:.*)(given:.*)(when:.*)(then:.*)",
           strictFormatGherkin: false
         }
@@ -72,8 +73,8 @@ Ext.define("gherkin-helper", {
                              items: [{
                                  xtype: 'exportgherkin',
                                  gherkinField: this.getGherkinField(),
-                                 gherkinRegexp: this.getGherkinRegexp()
-
+                                 gherkinRegexp: this.getGherkinRegexp(),
+                                 tagsField: this.getSetting('tagsField')
                              }]
                          },
                      },
@@ -100,10 +101,15 @@ Ext.define("gherkin-helper", {
        getRequiredFetchFields: function(){
          var fields = this.requiredGherkinFields;
          fields.push(this.getGherkinField());
+         if (this.getSetting('tagsField')){
+            fields.push(this.getSetting('tagsField'));
+         }
          this.logger.log('getRequiredFetchFields', fields);
          return fields ;
        },
        getSettingsFields: function(){
+         var tagField = this.getSetting('tagsField') || null;
+
           return [{
               xtype: 'rallyfieldcombobox',
               model: 'HierarchicalRequirement',
@@ -117,6 +123,25 @@ Ext.define("gherkin-helper", {
                         var attr = record.get('fieldDefinition').attributeDefinition;
                         return attr && !attr.ReadOnly && attr.AttributeType === "TEXT";
                     });
+              }}
+          },{
+              xtype: 'rallyfieldcombobox',
+              model: 'HierarchicalRequirement',
+              name: 'tagsField',
+              fieldLabel: 'Gherkin Tags Field',
+              labelWidth: 150,
+              labelAlign: 'right',
+              allowBlank: true,
+              allowNoEntry: true,
+              noEntryText: '-- No Tag Field --',
+              emptyText: '-- No Tag Field --',
+              listeners: {
+                ready: function(combo) {
+                    combo.store.filterBy(function(record) {
+                        var attr = record.get('fieldDefinition').attributeDefinition;
+                        return attr && !attr.ReadOnly && attr.AttributeType === "COLLECTION" && attr.Constrained === true && attr.Custom === true;
+                    });
+                    this.setValue(tagField);
               }}
           }];
        }
