@@ -33,7 +33,8 @@ Ext.define('CA.agile.technicalservices.utils.bulkmenu.ExportGherkin', {
           Ext.Array.each(this.records, function(r){
                var gherkinFile = Ext.create('CA.agile.technicalservices.GherkinFile', {
                  data: r.getData(),
-                 gherkinField: this.gherkinField
+                 gherkinField: this.gherkinField,
+                 tagsField: this.tagsField
                });
                gherkinFile.export();
           }, this);
